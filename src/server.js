@@ -1,7 +1,6 @@
 import http from "http";
 import WebSocket from "ws";
 import express from "express";
-import { randomUUID } from "crypto";
 
 const app = express();
 
@@ -17,10 +16,12 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 let subscribers = [];
+let i = 0;
 
 wss.on("connection", (socket) => {
-  const id = randomUUID();
-  subscribers = [...{ socket, nickname: "Anon", id }];
+  const id = i;
+  i++;
+  subscribers = [...subscribers, { socket, nickname: "Anon", id }];
   console.log("connected! id: " + id);
 
   socket.on("close", () => {
@@ -33,7 +34,7 @@ wss.on("connection", (socket) => {
 
     if (type === "new_message") {
       subscribers.forEach(({ nickname }) => {
-        socket.send(`${nickname}:${payload.toString("utf-8")}`);
+        socket.send(`${nickname}: ${payload.toString("utf-8")}`);
       });
     } else if (type === "nick") {
       subscribers = subscribers.map((browser) =>
@@ -45,4 +46,4 @@ wss.on("connection", (socket) => {
   });
 });
 
-server.listen(process.env.PORT, handleListen);
+server.listen(3000, handleListen);
